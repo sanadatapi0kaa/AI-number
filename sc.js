@@ -13,7 +13,7 @@ let autocount = 1;
 let quiet = false;
 let learn = true;
 let hidelayer = 32;
-let autotimes = 1; //auto base now 800 * 3
+let autotimes = 1; //auto base now 800 * 1
 let batch = 32; //batch
 let batcht = 0; //batch_count
 let omomig = 0.01;   //omomi_gakusyuuritu
@@ -219,10 +219,10 @@ function kaisei(){
   if (modecons) console.log("kaisei");
   for (let i = 0; i < hidelayer; i++) {
     for (let j = 0; j < 10; j++) {
-      weight2[j][i] -= sa2[j][i] * omomig;
+      weight2[j][i] -= sa2[j][i] * omomig * 2;
     }
 
-    biases2[i] -= sa4[i] * baiasug;
+    biases2[i] -= sa4[i] * baiasug * 2;
   }
 
   weight2 = weight2.map((row) => row.map((v) => Math.max(-1, Math.min(v, 1))));
@@ -230,9 +230,9 @@ function kaisei(){
 
   for (let i = 0; i < hidelayer; i++) {
     for (let j = 0; j < 784; j++) {
-      weight1[i][j] -= sa1[i][j] * omomig;
+      weight1[i][j] -= sa1[i][j] * omomig * 2;
     }
-    biases1[i] -= sa3[i] * baiasug;
+    biases1[i] -= sa3[i] * baiasug * 2;
   }
 
   weight1 = weight1.map((row) => row.map((v) => Math.max(-1, Math.min(v, 1))));
@@ -350,7 +350,7 @@ function saveNetworkToFolder() {
     console.log(`📁 フォルダ作成: ${folderName}`);
   }
 
-  //36000
+  //a*20, a*25? 推奨
   let hennsuus = {weight1, weight2, biases1, biases2};
 
   for (const [name, value] of Object.entries(hennsuus)) {
@@ -381,7 +381,7 @@ async function foldera(on) {
     file = __dirname + "/" + file;
     await runTrainingLoop(file, auto);
   }
-  if (on && ((correct / times) * 100).toFixed(2) < 15.00) {
+  if (on && ((correct / times) * 100).toFixed(2) < 12.00) {
     console.log(((correct / times) * 100).toFixed(2) + '%');
     resetnum(0);
     setTimeout(() => {
