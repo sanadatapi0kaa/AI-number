@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ロググラフ描画</title>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        button {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            border: none;
+            background: #3498db;
+            color: white;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        #status {
+            text-align: center;
+            margin-top: 10px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <button id="loadBtn">ログを読み込んでグラフ描画</button>
+    <div id="status"></div>
+
+    <canvas id="chartCanvas" width="400" height="200"></canvas>
+</div>
+
+<script>
+    let chart = null;
+
+    // ★ 何行飛ばすか指定（2なら 0,2,4,... を採用）
+    let skip = 4;
+
+    document.getElementById("loadBtn").addEventListener("click", async () => {
+        document.getElementById("status").textContent = "読み込み中…";
+        try {
+            const res = await fetch("log2.txt?" + Date.now());
+            if (!res.ok) throw new Error("取得に失敗");
+
+            const text = await res.text();
+
+            // 全行 → 数値化 → skip 行ごとに間引く
+            const lines = text.trim().split("\n")
+                .map(Number)
+                .filter((_, i) => i % skip === 0);
+
+            if (chart) chart.destroy(); // 再描画用に破棄
+
+            const ctx = document.getElementById("chartCanvas").getContext("2d");    
+
+            chart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: lines.map((_, i) => i * skip + 1), // 実際の行番号（1,1+skip,1+2skip,...）
+                    datasets: [{
+                        label: `log2.txt（${skip} 行飛ばし）`,
+                        data: lines,
+                        borderWidth: 2,
+                        borderColor: "blue",
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: { display: true, text: `行番号（${skip} 行飛ばし）` }
+                        },
+                        y: {
+                            title: { display: true, text: "値" }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById("status").textContent = "読み込み完了！";
+
+        } catch (e) {
+            document.getElementById("status").textContent = "読み込みエラー: " + e.message;
+        }
+    });
+</script>
+
+</body>
+</html>
