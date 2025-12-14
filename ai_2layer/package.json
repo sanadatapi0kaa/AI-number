@@ -1,0 +1,16 @@
+{
+  "name": "jjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sc.js",
+  "scripts": {
+    "start": "node sc.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "jimp": "^0.16.1",
+    "readline-sync": "^1.4.10"
+  }
+}
