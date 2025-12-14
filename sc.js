@@ -7,7 +7,7 @@ const Jimp = require("jimp");
 const { exec } = require('child_process');
 
 const fff = ["weight1", "weight2", "biases1", "biases2"];
-let modecons = false;
+let consolemode = false;
 let auto = false;
 let autocount = 1;
 let quiet = false;
@@ -50,7 +50,7 @@ douki(1);
 
 //softmax
 function softmax(arr) {
-  if (modecons) console.log("softmax");
+  if (consolemode) console.log("softmax");
   const maxVal = Math.max(...arr);
   const expArr = arr.map((x) => Math.exp(x - maxVal));
   const sum = expArr.reduce((a, b) => a + b, 0);
@@ -64,7 +64,7 @@ function leakeyrelu(x) {
 
 //He初期化の値を返す
 function heInit(inputSize, outputSize) {
-  if (modecons) console.log("Heinit");
+  if (consolemode) console.log("Heinit");
   const scale = Math.sqrt(2 / inputSize);
   let returnrow = [];
   for (let i = 0; i < outputSize; i++) {
@@ -79,6 +79,7 @@ function heInit(inputSize, outputSize) {
 
 //関数たちをリセット
 function resetnum(input) {
+if (consolemode) console.log("resetnum");
 if (input === 0 || input === 1) {
   weight1 = heInit(784, hidelayer);
   fs.writeFileSync("weight1.json", JSON.stringify(weight1));
@@ -113,7 +114,7 @@ console.log('新装開店！   ' + input);
 
 //inputファイルをデータ化
 async function processImage(filePath, index) {
-  if (modecons) console.log("prosessimage");
+  if (consolemode) console.log("prosessimage");
   if (learnbit) {
     return [images[index], labels[index]];
   }else {
@@ -132,7 +133,7 @@ async function processImage(filePath, index) {
 
 //inputから計算
 function forward(input) {
-  if (modecons) console.log("forward");
+  if (consolemode) console.log("forward");
   hidden = Array(hidelayer).fill(0);
   flatInput = input.flat();
 
@@ -169,7 +170,7 @@ function forward(input) {
 
 //saの計算
 function backpropagate(label) {
-  if (modecons) console.log("backpropagate");
+  if (consolemode) console.log("backpropagate");
   //宣言系
   let cost = Array(10).fill(0);
   cost = output.map((o, i) => o - (i === label ? 1 : 0));
@@ -199,8 +200,7 @@ function backpropagate(label) {
   }
   
   for (let j = 0; j < hidelayer; j++) {
-    const reluDeriv = hidden[j] > 0 ? 1 : 0;
-    delta_hidden[j] *= reluDeriv;
+    delta_hidden[j] *= hidden[j] > 0 ? 1 : 0;
   }
 
   for (let i = 0; i < hidelayer; i++) {
@@ -225,7 +225,7 @@ function backpropagate(label) {
 
 //saの適用
 function kaisei(){
-  if (modecons) console.log("kaisei");
+  if (consolemode) console.log("kaisei");
   for (let i = 0; i < hidelayer; i++) {
     for (let j = 0; j < 10; j++) {
       weight2[j][i] -= sa2[j][i] * omomig * 2;
@@ -250,7 +250,7 @@ function kaisei(){
 
 //ファイルと関数を同期する、なければ作成
 function douki(isfirst) {
-  if (modecons) console.log("douki");
+  if (consolemode) console.log("douki");
   let allExist = true;
   fff.forEach((value) => {
     if (!fs.existsSync(`${value}.json`)) {
@@ -307,7 +307,7 @@ function douki(isfirst) {
 
 //AIの総括
 async function runTrainingLoop(imageFolderPath, auto) {
-  if (modecons) console.log("runtrainingroop");
+  if (consolemode) console.log("runtrainingroop");
 
   //画像とりだし
   const files = fs
@@ -379,7 +379,7 @@ async function runTrainingLoop(imageFolderPath, auto) {
 
 //AIの総括: ubyteファイルを使用
 async function runTrainingLoopBit(auto) {
-  if (modecons) console.log("runtrainingroopbit");
+  if (consolemode) console.log("runtrainingroopbit");
   let isautocount = 60000;
   if (auto) isautocount = autocount * 800;
   nowtimes = nowtimes % 60000;
@@ -471,15 +471,13 @@ function saveNetworkToFolder() {
 
 //AI前の総括
 async function foldera(on) {
-  if (modecons) console.log("foldera");
+  if (consolemode) console.log("foldera");
   if (on) quiet = true;
   if (on) auto = true;
   else auto = false;
   douki();
   if (learnbit) {
-    for (let i = 0; i < autotimes; i++) {
-      await runTrainingLoopBit(auto);
-    }
+    await runTrainingLoopBit(auto);
   } else {
     const files = fs.readdirSync(__dirname);
     const testCluFiles = files.filter((file) => file.startsWith("test_clu"));
@@ -505,7 +503,7 @@ async function foldera(on) {
       console.log('start again');
     }else{
       autocount = 1;
-      if (modecons) {
+      if (consolemode) {
         exec('.bat', (err, stdout, stderr) => {
           if (err) {
             console.error(err);
@@ -521,62 +519,60 @@ async function foldera(on) {
 
 //開始
 async function start() {
-  if (modecons) console.log("start");
-  let folder = readlineSync.question("選択してくださいc/i/a/b/s/u/l: ");
-  if (folder === "c") {
-    folder = readlineSync.question("ほんとに？y/n: ");
-    if (folder === "y") {
+  if (consolemode) console.log("start");
+  let answer = readlineSync.question("選択してくださいc/i/a/b/s/u/l: ");
+  if (answer === "c") {
+    answer = readlineSync.question("ほんとに？y/n: ");
+    if (answer === "y") {
       resetnum(0);
     }
     start();
-  } else if (folder === "i") {
-    folder = readlineSync.question("画像フォルダのパスを入力してください: ");
+  } else if (answer === "i") {
+    answer = readlineSync.question("画像フォルダのパスを入力してください: ");
     learnbit = false;
     douki();
-    runTrainingLoop(folder);
-  } else if (folder === "a") {
-    douki();
+    runTrainingLoop(answer);
+  } else if (answer === "a") {
     foldera(0);
-  }else if (folder === "ca") {
-    douki();
+  }else if (answer === "ca") {
     quiet = true;
     foldera(0);
-  }else if (/^a\*\d+$/.test(folder)) {
-    douki();
-    let split = parseInt(folder.split("*")[1]);
+  }else if (/^a\*\d+$/.test(answer)) {
+    let split = parseInt(answer.split("*")[1]);
     for (let i = 0; i < split; i++) {
       await foldera(0);
     }
     start().catch(err => console.error(err));
-  }else if (folder === "b") {
+  }else if (answer === "b") {
     console.log(`今： ${omomig}, ${baiasug}`);
-    folder = readlineSync.question("値: ");
-    if (folder !== "") {
-      omomig = parseFloat(folder);
-      baiasug = parseFloat(folder);
+    answer = readlineSync.question("値: ");
+    if (answer !== "") {
+      omomig = parseFloat(answer);
+      baiasug = parseFloat(answer);
     }
     console.log(`バイアス：${omomig} ${baiasug}`);
     start();
-  }else if (folder === 's') {
+  }else if (answer === 's') {
     saveNetworkToFolder();
     start();
-  }else if (folder === 'u') {
+  }else if (answer === 'u') {
     resetnum(0);
     foldera(1);
-  }else if (folder === 't') {
+  }else if (answer === 't') {
     console.log(`now: ${learnbit}`);
     if (learnbit) learnbit = false;
     else learnbit = true;
     console.log(`change: ${learnbit}`);
     start();
-  }else if (folder === 'l'){
+  }else if (answer === 'l'){
     console.log(`now: ${learn}`);
     if (learn) learn = false;
     else learn = true;
     console.log(`change: ${learn}`);
     start();
-  }else if (folder === 'help') {
+  }else if (answer === 'help') {
     console.log(`c: clear データ全消し\ni: custom カスタムファイル\na: all file 存在するすべての画像を見る\nb: bias 学習率変更 今:${omomig}\ns: save データを同じ階層に保存\nu: auto 800時点で11%以上のデータのみ通過\nt: 学習方法の変更\nl: learn 現在のデータを読み込むときに学習するかしないか`);
+    start();
   }else {
     console.log('error');
     start();
